@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{plantillas/plantilla :: head}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Estilo personalizado para la paginación */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #4D8CF4 !important;
+            background-color: #f8f9fa !important;
+            border: 1px solid #e0e0e0 !important;
+            padding: 5px 10px !important;
+            margin: 2px;
+            border-radius: 5px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #4D8CF4 !important;
+            color: white !important;
+        }
+
+        /* Alinear el selector de registros y el cuadro de búsqueda de DataTables */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+
+<body>
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container text-center shadow-lg p-3 mb-5 bg-body-tertiary rounded">
+    <h1 th:text="${contenido}"></h1>
+
+    <!-- Tabla de pacientes -->
+    <div class="table-responsive">
+        <table id="dataTable" th:if="${!paciente.isEmpty()}" class="table table-striped table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Fecha de Nacimiento</th>
+                <th scope="col">Número de contacto</th>
+                <th scope="col">Email</th>
+                <th scope="col">Dirección</th>
+                <th scope="col">Operaciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="pt: ${paciente}">
+                <td th:text="${pt.nombre}"></td>
+                <td th:text="${pt.fechaNac}"></td>
+                <td th:text="${pt.numeroCelular}"></td>
+                <td th:text="${pt.email}"></td>
+                <td th:text="${pt.direccion}"></td>
+                <td>
+                    <a th:href="@{/front/pacientes/{id}/editar (id=${pt.idPaciente})}" class="btn btn-success">Modificar <i class="fas fa-pen-nib" aria-hidden="true"></i></a>
+
+                    <!-- Botón para abrir el modal -->
+                    <button type="button" class="btn btn-danger btn-delete"
+                            th:attr="data-id=${pt.idPaciente}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteModal">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Modal de confirmación de eliminación -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Confirmación de Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalBodyText">¿Está seguro de que desea eliminar este paciente? La eliminación
+                        de los registros de pacientes pueden generar inconsistencias en los datos, pues registros
+                        de citas pueden depender de los registros de pacientes.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form id="deleteForm" method="post">
+                            <input type="hidden" name="_method" value="delete">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Inicializar DataTable
+        var table = $('#dataTable').DataTable({
+            "pageLength": 10,
+            "language": {
+                "sProcessing": "Procesando...",
+                "sLengthMenu": "Mostrar _MENU_ registros",
+                "sZeroRecords": "No se encontraron resultados",
+                "sEmptyTable": "Ningún dato disponible en esta tabla",
+                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                "sInfoThousands": ",",
+                "sLoadingRecords": "Cargando...",
+                "oPaginate": {
+                    "sFirst": "primera",
+                    "sLast": "ultima",
+                    "sNext": "siguiente",
+                    "sPrevious": "anterior"
+                },
+                "search": "" // Esto elimina el texto "Search:"
+            },
+            "columnDefs": [
+                {
+                    "targets": 0, // Indicar que solo se debe aplicar el filtro a la primera columna (la de nombre)
+                    "searchable": true // Habilitar la búsqueda solo en esta columna
+                },
+                {
+                    "targets": '_all', // Aplicar el filtro de búsqueda en las demás columnas, pero deshabilitar la búsqueda
+                    "searchable": false
+                }
+            ]
+        });
+
+        // Mover el cuadro de búsqueda antes del selector de "Mostrar X resultados"
+        var dataTableWrapper = $('.dataTables_wrapper');
+        var lengthMenu = dataTableWrapper.find('.dataTables_length');
+        var filterMenu = dataTableWrapper.find('.dataTables_filter');
+
+        // Insertar el cuadro de búsqueda antes del selector de cantidad de registros
+        lengthMenu.before(filterMenu);
+
+        // Modificar el cuadro de búsqueda para añadir placeholder y estilo
+        $('.dataTables_filter input[type="search"]')
+            .attr('placeholder', 'Buscar por nombre...')
+            .addClass('form-control')
+            .css({
+                'width': '500px',
+                'margin-right': '10px',
+                'padding': '5px',
+                'border': '1px solid #ced4da',
+                'border-radius': '5px'
+            });
+
+        // Alinear el selector de cantidad de registros a la derecha
+        $('.dataTables_wrapper .dataTables_length').css({
+            'margin-left': 'auto', // Alineación a la derecha
+            'padding-bottom': '10px', // Espacio en la parte inferior
+            'padding-top': '10px'
+        });
+
+        // Agregar espaciado inferior al contenedor de la tabla
+        $('.dataTables_wrapper').css({
+            'padding-bottom': '20px' // Espacio en la parte inferior
+        });
+    });
+</script>
+<script>
+    // Configurar el modal dinámicamente al hacer clic en "Eliminar"
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.btn-delete');
+        const deleteForm = document.getElementById('deleteForm');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.getAttribute('data-id');
+                const actionUrl = `/dentalflamingos/front/pacientes/eliminar/${id}`;
+                deleteForm.setAttribute('action', actionUrl);
+            });
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var dropdowns = document.querySelectorAll('.dropdown-submenu .dropdown-toggle');
+        dropdowns.forEach(function(dd) {
+            dd.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.nextElementSibling.classList.toggle('show');
+            });
+        });
+    });
+</script>
+</body>
+</html>

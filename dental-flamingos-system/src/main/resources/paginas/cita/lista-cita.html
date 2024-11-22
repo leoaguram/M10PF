@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body>
+<header th:replace="~{plantillas/plantilla :: header}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Estilo personalizado para la paginación */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #4D8CF4 !important;
+            background-color: #f8f9fa !important;
+            border: 1px solid #e0e0e0 !important;
+            padding: 5px 10px !important;
+            margin: 2px;
+            border-radius: 5px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #4D8CF4 !important;
+            color: white !important;
+        }
+
+        /* Alinear el selector de registros y el cuadro de búsqueda de DataTables */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</header>
+<main class="container text-center shadow-lg p-3 mb-5 bg-body-tertiary rounded">
+    <h1 th:text="${contenido}"></h1>
+
+    <div class="table-responsive">
+    <table th:if="${!cita.isEmpty()}" class="table table-striped table-hover table-sm">
+        <thead class="table-dark table-bordered">
+        <tr>
+            <th scope="col"> ID Cita</th>
+            <th scope="col"> Fecha y hora de cita</th>
+            <th scope="col"> Paciente</th>
+            <th scope="col"> Dentista Asignado</th>
+            <th scope="col"> Tratamiento</th>
+            <th scope="col"> Status de la cita</th>
+            <th scope="col"> Observaciones</th>
+            <th scope="col"> Operaciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="ct: ${cita}">
+            <td th:text="${ct.idCita}"></td>
+            <td th:text="${ct.fechaHoraCita}"></td>
+            <td th:text="${ct.nombrePaciente}"></td>
+            <td th:text="${ct.nombreDentista}"></td>
+            <td th:text="${ct.tratamiento}"></td>
+            <td th:text="${ct.status}"></td>
+            <td th:text="${ct.observaciones}"></td>
+            <td>
+                <a th:href="@{/front/citas/{id}/editar (id=${ct.idCita})}"
+                   class="btn btn-success">Modificar <i class="fas fa-pen-nib"
+                                                        aria-hidden="true"></i> </a>
+                <!-- Botón para abrir el modal -->
+                <button type="button" class="btn btn-danger btn-delete"
+                        th:attr="data-id=${ct.idCita}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal">
+                    Eliminar
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+        <!-- Modal de confirmación de eliminación -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Confirmación de Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalBodyText">¿Está seguro de que desea eliminar esta cita? La eliminación
+                            de los registros de citas pueden generar inconsistencias en los datos.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form id="deleteForm" method="post">
+                            <input type="hidden" name="_method" value="delete">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> <!-- Optional JS to enhance dropdowns -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var dropdowns = document.querySelectorAll('.dropdown-submenu .dropdown-toggle');
+        dropdowns.forEach(function(dd) {
+            dd.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.nextElementSibling.classList.toggle('show');
+            });
+        });
+    });
+</script>
+<script>
+    // Configurar el modal dinámicamente al hacer clic en "Eliminar"
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.btn-delete');
+        const deleteForm = document.getElementById('deleteForm');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.getAttribute('data-id');
+                const actionUrl = `/dentalflamingos/front/citas/eliminar/${id}`;
+                deleteForm.setAttribute('action', actionUrl);
+            });
+        });
+    });
+</script>
+</body>
+</html>
